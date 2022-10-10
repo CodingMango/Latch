@@ -1,0 +1,135 @@
+import os
+import discord
+import subprocess
+from os import getcwd
+import pyautogui
+import threading
+
+#Credit @CodingMango on Github
+
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
+
+path=os.getcwd()+r'\req'
+if not os.path.exists(path):
+    print(path)
+    with open('req', 'a') as f:
+        f.write(input("Token for screen capture bot: "))
+        f.write('\n')
+        f.write(input("Token for command bot: "))
+        f.write('\n')
+        f.write(input("Indent character: "))
+indentchar=open('req', 'r').readlines()[2]
+
+@client.event
+async def on_message(message):
+ global runkill
+ if not message.author==client.user:
+  m=str(message.content).lower()
+  mraw=str(message.content)
+  if not m=="run" and not m.startswith("$") and not m=="cl" and not m=="show" and not m.startswith('delt') and not m=="codeout" and not m.startswith("<$") and not m=="cmds" and not m.startswith("shavewin") and not m=="kill" and not m=="runhelp":
+   await message.channel.send("added to exec")
+   i=-1
+   mraw=list(mraw)
+   for char in mraw:
+    i+=1
+    if char==indentchar:
+     mraw[i]=' '
+    else:
+     break
+   with open('exec', 'a') as f:
+    mraw="".join(mraw)
+    f.write(str(mraw))
+    f.write('\n')
+  if m=='run':
+    runkill=False
+    await message.channel.send("running code")
+    print('started run')
+    runth=subprocess.Popen('python exec')
+  if m.startswith('$'):
+      await message.channel.send("ran $hell")
+      scom=m.removeprefix('$')
+      sout=subprocess.Popen(scom)
+  if m=='cl':
+      await message.channel.send("cleared all")
+      open('exec', 'r+').truncate(0)
+  if m=='show':
+      for line in open('exec', 'r').read().splitlines() :
+          line=list(line)
+          ind=0
+          for char in line:
+              if char=='\n':
+                  line.pop(ind)
+              if char==' ':
+                  line[ind]=indentchar
+              else:
+                  break
+              ind+=1
+          line=''.join(line)
+          await message.channel.send(line)
+  if m.startswith('delt'):
+      remnumber=int(m.removeprefix('delt'))
+      await message.channel.send(f"killed line {remnumber}")
+      lines=open('exec', 'r').readlines()
+      print(lines)
+      lines.pop(remnumber)
+      print(lines)
+      open('exec', 'r+').truncate(0)
+      for newl in lines:
+       print(newl)
+       open('exec', 'a').write(newl)
+
+
+  if m=='codeout':
+   runkill=False
+   await message.channel.send("ran/running code with output:")
+   async def run():
+       out = subprocess.check_output("python exec")
+       out=(str(out).removesuffix(r"\r\n'")).removeprefix("b'")
+       await message.channel.send(out)
+   runth=Thread(target=run)
+   runth.start()
+  if m.startswith("<$"):
+   await message.channel.send("ran $hell with output:")
+   shellc=m.removeprefix('<$')
+   outs, err = subprocess.check_output(shellc)
+   outs=(str(outs).removesuffix(r"\r\n'")).removeprefix("b'")
+   await message.channel.send(outs)
+  if m.startswith("shavewin:"):
+   winname=mraw.removeprefix('shavewin:')
+   print(winname)
+   if winname!=r'cloudcontoller – C:\Users\iLife\PycharmProjects\cloudcontoller\venv\main.py':
+    subprocess.call(f'taskkill /f /im {winname}', shell=True)
+  if m=="kill":
+    runkill=False
+  if m=="runhelp":
+      await message.channel.send('Make sure to add ```python\nglobal runkill\n if runkill:\n  break``` at the end of an infinite while loop (still inside it though) to have controll over it through the kill command')
+
+  if m=="cmds":
+      await message.channel.send("◻To run (Type runhelp for more info) : run\n"
+                                 "◻Run `$hell` : `$`\n"
+                                 "◻clear notebook : `cl`\n"
+                                 "◻delete a specific line (starts with 0) : `delt{linenumber}`\n"
+                                 "◻run code with output in discord (Type runhelp for more info) : `codeout`\n"           
+                                 "◻run `$hell` with output in discord (if possible) : `<$`\n"
+                                 "◻Show all code : `show`  \n"
+                                 "◻Close a window : `shavewin:{winname with extension (.exe, .txt, etc)}`\n"
+                                 "◻Kill while loop (works only if runkill break is added to while loop as told in `runhelp`) : `kill`")
+
+def screensteal():
+ intents = discord.Intents.default()
+ intents.message_content = True
+ client = discord.Client(intents=intents)
+
+ @client.event
+ async def on_message(message):
+  if not message.author==client.user:
+    while True:
+     screenshot = pyautogui.screenshot()
+     screenshot.save(fr'{getcwd()}\default.png')
+     await message.channel.send(file=discord.File('default.png'))
+ client.run((open('req', 'r').readlines())[0])
+th2=threading.Thread(target=screensteal)
+th2.start()
+client.run((open('req', 'r').readlines())[1])
